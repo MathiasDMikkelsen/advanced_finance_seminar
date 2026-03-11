@@ -1,0 +1,20 @@
+# ── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+
+# ── Virtual environment ───────────────────────────────────────────────────────
+.venv/
+
+# ── Data (do not commit large or sensitive files) ─────────────────────────────
+data/raw/*
+!data/raw/.gitkeep
+
+# ── Results (generated output — reproducible from the script) ─────────────────
+results/*
+!results/.gitkeep
+
+# ── OS / editor ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/settings.json
