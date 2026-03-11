@@ -51,7 +51,7 @@ pip install -r requirements.txt
 
 ## How to run
 
-1. Place `Testdata.xlsx` in `data/raw/`.
+1. Place `testdata_clean` in `data/raw/`.
 2. Open `analysis.py` in VS Code.
 3. Run it — either press **F5** or in the terminal:
 
@@ -69,7 +69,7 @@ The coefficient table is also saved to `results/regression_results.csv`.
 
 Both partners should place the Excel file at:
 ```
-data/raw/Testdata.xlsx
+data/raw/testdata_clean.xlsx
 ```
 This path is **relative to the project root**, so it works on any machine
 as long as the folder structure is intact.  
@@ -86,11 +86,3 @@ via version control).
 | `pandas` | Data loading and wrangling |
 | `numpy` | Numerical operations |
 | `statsmodels` | OLS regression with robust standard errors |
-
----
-
-## TODO — later iterations
-
-- Scale `Surprise_EPS` and `Disagreement_Gap` by the pre-announcement stock price
-- Add control variables (e.g., `log(Market_Cap)`, book-to-market, momentum)
-- Extend to the full dataset (same Excel structure, no code changes needed)
