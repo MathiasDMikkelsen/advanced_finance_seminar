@@ -1,7 +1,7 @@
-﻿"""
+"""
 analysis.py
 ===========
-Post-Earnings Announcement Drift (PEAD) — Main Analysis Script
+Post-Earnings Announcement Drift (PEAD) � Main Analysis Script
 
 Hypothesis:
     A larger disagreement gap (Management Guidance EPS - Analyst Consensus EPS)
@@ -9,11 +9,12 @@ Hypothesis:
     announcement day and a stronger PEAD over the following 60 trading days.
 
 Main regression:
-    CAR_2_60 = alpha + b1*Surprise_EPS + b2*Disagreement_Gap
-             + b3*(Surprise_EPS x Disagreement_Gap) + e
+    CAR_2_60 = alpha + b1*Z_Surprise + b2*Z_Gap
+             + b3*Z_Interaction
+             + b4*Std_Log_Market_Cap + Sector_Fixed_Effects + e
 
-Data file:  data/raw/testdata_clean.xlsx  (sheet: "Main Hard Copy")
-            All key variables (CARs, Surprise_EPS, Disagreement_Gap) are
+Data file:  data/raw/phase2.xlsx  (sheet: "Main Hard Copy")
+            All key variables (CARs, Std_Surprise_EPS, Std_Disagreement_Gap) are
             pre-calculated in the Excel file via Bloomberg formulas.
 
 How to run:
@@ -36,14 +37,14 @@ import pandas as pd
 import statsmodels.api as sm
 
 ROOT        = Path(__file__).parent
-DATA_FILE   = ROOT / "data" / "raw" / "testdata_clean.xlsx"
+DATA_FILE   = ROOT / "data" / "raw" / "phase2.xlsx"
 RESULTS_DIR = ROOT / "results"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 if not DATA_FILE.exists():
     sys.exit(
         f"\nERROR: Data file not found at:\n  {DATA_FILE}\n\n"
-        "Please place testdata_clean.xlsx in the data/raw/ folder and re-run.\n"
+        "Please place phase2.xlsx in the data/raw/ folder and re-run.\n"
     )
 
 
@@ -69,44 +70,65 @@ print("=" * 65)
 print("TASK 2 -- Constructing variables")
 print("=" * 65)
 
-# The Excel file already contains Surprise_EPS and Disagreement_Gap as
-# pre-calculated columns from Bloomberg. We verify they are present and
-# construct only the interaction term needed for the regression.
+# The Excel file already contains Std_Surprise_EPS and Std_Disagreement_Gap as
+# pre-calculated, standardized columns from Bloomberg. We verify they are present
+# and construct the standardized interaction term needed for the regression.
 #
-# If either column is missing (e.g. in a future dataset where they are not
-# pre-calculated), we fall back to computing them from the raw EPS columns.
+# If either column is missing, the script falls back to computing raw differences.
+# (Note: for a true standardized fallback later, you'd divide by stock price).
 
-# -- Surprise_EPS  (Actual EPS - Analyst Consensus EPS) -----------------------
-# Positive = beat, Negative = miss.
-# TODO (later): scale by pre-announcement stock price for cross-firm comparability.
-if "Surprise_EPS" not in df.columns or df["Surprise_EPS"].isna().all():
-    print("  'Surprise_EPS' not found -- computing from raw EPS columns.")
-    df["Surprise_EPS"] = df["Actual_EPS"] - df["Analyst_Consensus_EPS"]
+# -- Std_Surprise_EPS  (Standardized Surprise) --------------------------------
+# Positive = beat, Negative = miss. Comparable across firms.
+if "Std_Surprise_EPS" not in df.columns or df["Std_Surprise_EPS"].isna().all():
+    print("  'Std_Surprise_EPS' not found -- falling back to raw computation.")
+    df["Std_Surprise_EPS"] = df["Actual_EPS"] - df["Analyst_Consensus_EPS"]
 else:
-    print("  'Surprise_EPS' loaded from Excel.")
+    print("  'Std_Surprise_EPS' loaded from Excel.")
 
-# -- Disagreement_Gap  (Mgmt Guidance EPS - Analyst Consensus EPS) ------------
+# -- Std_Disagreement_Gap  (Standardized Gap) ---------------------------------
 # Positive = management more optimistic than analysts.
 # Negative = management more pessimistic than analysts.
-# Large absolute value = high informational complexity -> expected stronger drift.
-# TODO (later): scale by pre-announcement stock price.
-if "Disagreement_Gap" not in df.columns or df["Disagreement_Gap"].isna().all():
-    print("  'Disagreement_Gap' not found -- computing from raw EPS columns.")
-    df["Disagreement_Gap"] = df["Mgmt_Guidance_EPS"] - df["Analyst_Consensus_EPS"]
+# Comparable across firms. Large absolute value = high informational complexity -> stronger drift.
+if "Std_Disagreement_Gap" not in df.columns or df["Std_Disagreement_Gap"].isna().all():
+    print("  'Std_Disagreement_Gap' not found -- falling back to raw computation.")
+    df["Std_Disagreement_Gap"] = df["Mgmt_Guidance_EPS"] - df["Analyst_Consensus_EPS"]
 else:
-    print("  'Disagreement_Gap' loaded from Excel.")
+    print("  'Std_Disagreement_Gap' loaded from Excel.")
 
-# -- Interaction term: Surprise_EPS x Disagreement_Gap ------------------------
-# b3 on this term tests the core hypothesis: does a wider disagreement gap
-# amplify the relationship between the earnings surprise and subsequent drift?
-df["Surprise_x_Gap"] = df["Surprise_EPS"] * df["Disagreement_Gap"]
-print("  'Surprise_x_Gap' (interaction term) computed.")
+# -- Continuous Variable Centering and Standardization --------------------------
+# Convert Surprise and Gap to Z-scores to reduce structural multicollinearity 
+# and explicit fix scaling issues before creating the interaction term.
+df["Z_Surprise"] = (df["Std_Surprise_EPS"] - df["Std_Surprise_EPS"].mean()) / df["Std_Surprise_EPS"].std()
+df["Z_Gap"] = (df["Std_Disagreement_Gap"] - df["Std_Disagreement_Gap"].mean()) / df["Std_Disagreement_Gap"].std()
+
+# -- Interaction term: Z_Surprise x Z_Gap -------------------------------------
+df["Z_Interaction"] = df["Z_Surprise"] * df["Z_Gap"]
+print("  'Z_Interaction' (interaction term) computed.")
+
+# -- Control Variables: Market Cap and Sector ---------------------------------
+# We use the natural log of Market Cap to account for size effects, and standardize it.
+if "Market_Cap" in df.columns:
+    log_mc = np.log(df["Market_Cap"].replace(0, np.nan))
+    df["Std_Log_Market_Cap"] = (log_mc - log_mc.mean()) / log_mc.std()
+    print("  'Std_Log_Market_Cap' computed.")
+else:
+    df["Std_Log_Market_Cap"] = np.nan
+
+# We create dummy variables for the Sector column.
+# drop_first=True avoids the dummy variable trap (perfect multicollinearity).
+sector_cols = []
+if "Sector" in df.columns:
+    sector_dummies = pd.get_dummies(df["Sector"], prefix="Sector", drop_first=True, dtype=int)
+    df = pd.concat([df, sector_dummies], axis=1)
+    sector_cols = sector_dummies.columns.tolist()
+    print(f"  {len(sector_cols)} Sector dummy variables created.")
 
 # -- Print variable overview --------------------------------------------------
 display_cols = [
     "Ticker", "Event_ID",
     "Actual_EPS", "Analyst_Consensus_EPS", "Mgmt_Guidance_EPS",
-    "Surprise_EPS", "Disagreement_Gap", "Surprise_x_Gap",
+    "Z_Surprise", "Z_Gap", "Z_Interaction",
+    "Std_Log_Market_Cap", "Sector",
     "CAR_0_1", "CAR_2_60",
 ]
 display_cols = [c for c in display_cols if c in df.columns]
@@ -114,8 +136,8 @@ display_cols = [c for c in display_cols if c in df.columns]
 print("\nAll events -- key variables:")
 print(df[display_cols].to_string(index=False))
 
-key_vars = ["Surprise_EPS", "Disagreement_Gap", "Surprise_x_Gap",
-            "CAR_0_1", "CAR_2_60"]
+key_vars = ["Z_Surprise", "Z_Gap", "Z_Interaction",
+            "Std_Log_Market_Cap", "CAR_0_1", "CAR_2_60"]
 key_vars = [c for c in key_vars if c in df.columns]
 
 print("\nDescriptive statistics:")
@@ -129,17 +151,19 @@ print(df[key_vars].describe().round(4).to_string())
 print("\n" + "=" * 65)
 print("TASK 3 -- OLS Regression")
 print("  Dependent variable : CAR_2_60 (post-announcement drift, pp)")
-print("  Regressors         : Surprise_EPS")
-print("                       Disagreement_Gap")
-print("                       Surprise_EPS x Disagreement_Gap  (interaction)")
-print("  Standard errors    : HC3 (heteroskedasticity-robust)")
+print("  Regressors         : Z_Surprise")
+print("                       Z_Gap")
+print("                       Z_Interaction (int.)")
+print("                       Std_Log_Market_Cap")
+print("                       Sector Fixed Effects")
+print("  Standard errors    : Clustered by Firm (Ticker)")
 print("=" * 65)
 
 DEPENDENT  = "CAR_2_60"
-REGRESSORS = ["Surprise_EPS", "Disagreement_Gap", "Surprise_x_Gap"]
+REGRESSORS = ["Z_Surprise", "Z_Gap", "Z_Interaction", "Std_Log_Market_Cap"] + sector_cols
 
-# Drop rows where any required variable is missing (listwise deletion)
-reg_df = df[[DEPENDENT] + REGRESSORS].dropna()
+# Drop rows where any required variable (or our clustering variable) is missing (listwise deletion)
+reg_df = df[["Ticker", DEPENDENT] + REGRESSORS].dropna()
 n_obs  = len(reg_df)
 
 print(f"\n  Full sample  : {len(df)} events")
@@ -156,10 +180,9 @@ else:
     # sm.add_constant() prepends a column of 1s (the intercept alpha).
     X = sm.add_constant(reg_df[REGRESSORS])
 
-    # HC3 robust standard errors -- recommended for cross-sectional financial
-    # data, especially in small samples. Inflates SEs for high-leverage obs,
-    # making inference more conservative.
-    result = sm.OLS(y, X).fit(cov_type="HC3")
+    # Clustered standard errors at the firm level to account for the fact
+    # that some observations belong to the same company across different events.
+    result = sm.OLS(y, X).fit(cov_type="cluster", cov_kwds={"groups": reg_df["Ticker"]})
 
     # -- Full statsmodels summary ----------------------------------------------
     print("\n")

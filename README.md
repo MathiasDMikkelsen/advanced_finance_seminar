@@ -12,8 +12,8 @@ A larger disagreement gap (Management Guidance EPS − Analyst Consensus EPS) cr
 
 **Main regression:**
 ```
-CAR_2_60 = α + β1·Surprise_EPS + β2·Disagreement_Gap
-         + β3·(Surprise_EPS × Disagreement_Gap) + ε
+CAR_2_60 = α + β1·Std_Surprise_EPS + β2·Std_Disagreement_Gap
+         + β3·(Std_Surprise_EPS × Std_Disagreement_Gap) + Controls + ε
 ```
 
 ---
