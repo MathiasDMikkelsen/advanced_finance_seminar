@@ -141,8 +141,8 @@ display_cols = [
 ]
 display_cols = [c for c in display_cols if c in df.columns]
 
-print("\nAll events -- key variables:")
-print(df[display_cols].to_string(index=False))
+print("\nPreview of key variables (first 10 rows):")
+print(df[display_cols].head(10).to_string(index=False))
 
 key_vars = ["Z_Surprise", "Z_Gap", "Z_Interaction",
             "Std_Log_Market_Cap", "CAR_0_1", "CAR_2_60"]
@@ -166,6 +166,127 @@ print("                       Std_Log_Market_Cap")
 print("                       Sector Fixed Effects")
 print("  Standard errors    : Clustered by Firm (Ticker)")
 print("=" * 65)
+
+print("\n" + "-" * 65)
+print("MODEL 1 -- Baseline PEAD")
+print("  Regressors         : Z_Surprise")
+print("-" * 65)
+
+DEPENDENT  = "CAR_2_60"
+REGRESSORS = ["Z_Surprise"]
+
+# Drop rows where any required variable (or our clustering variable) is missing (listwise deletion)
+reg_df = df[["Ticker", DEPENDENT] + REGRESSORS].dropna()
+n_obs  = len(reg_df)
+
+print(f"\n  Full sample  : {len(df)} events")
+print(f"  Regression N : {n_obs} observations (after removing rows with missing values)")
+
+if n_obs < len(REGRESSORS) + 2:
+    print(
+        "\n  WARNING: Not enough complete observations to run the regression.\n"
+        "  Please check that all required columns contain data.\n"
+    )
+else:
+    y = reg_df[DEPENDENT]
+
+    # sm.add_constant() prepends a column of 1s (the intercept alpha).
+    X = sm.add_constant(reg_df[REGRESSORS])
+
+    # Clustered standard errors at the firm level to account for the fact
+    # that some observations belong to the same company across different events.
+    result = sm.OLS(y, X).fit(cov_type="cluster", cov_kwds={"groups": reg_df["Ticker"]})
+
+    # -- Full statsmodels summary ----------------------------------------------
+    print("\n")
+    print(result.summary())
+
+    # -- Quick-read summary ----------------------------------------------------
+    print()
+    print("  --- Key results ---------------------------------------------------")
+    for var in ["const"] + REGRESSORS:
+        coef  = result.params[var]
+        pval  = result.pvalues[var]
+        se    = result.bse[var]
+        stars = "***" if pval < 0.01 else "**" if pval < 0.05 else "*" if pval < 0.1 else ""
+        print(
+            f"  {var:<32}  b = {coef:+.4f}  SE = {se:.4f}"
+            f"  p = {pval:.3f}  {stars}"
+        )
+    print(f"\n  R2 = {result.rsquared:.4f}   Adj. R2 = {result.rsquared_adj:.4f}"
+          f"   N = {int(result.nobs)}")
+    print("  -------------------------------------------------------------------")
+    print()
+    print("  Significance: *** p<0.01  ** p<0.05  * p<0.10")
+    print()
+
+
+
+print("\n" + "-" * 65)
+print("MODEL 2 -- Add Disagreement")
+print("  Regressors         : Z_Surprise")
+print("                       Z_Gap")
+print("-" * 65)
+
+REGRESSORS = ["Z_Surprise", "Z_Gap"]
+
+# Drop rows where any required variable (or our clustering variable) is missing (listwise deletion)
+reg_df = df[["Ticker", DEPENDENT] + REGRESSORS].dropna()
+n_obs  = len(reg_df)
+
+print(f"\n  Full sample  : {len(df)} events")
+print(f"  Regression N : {n_obs} observations (after removing rows with missing values)")
+
+if n_obs < len(REGRESSORS) + 2:
+    print(
+        "\n  WARNING: Not enough complete observations to run the regression.\n"
+        "  Please check that all required columns contain data.\n"
+    )
+else:
+    y = reg_df[DEPENDENT]
+
+    # sm.add_constant() prepends a column of 1s (the intercept alpha).
+    X = sm.add_constant(reg_df[REGRESSORS])
+
+    # Clustered standard errors at the firm level to account for the fact
+    # that some observations belong to the same company across different events.
+    result = sm.OLS(y, X).fit(cov_type="cluster", cov_kwds={"groups": reg_df["Ticker"]})
+
+    # -- Full statsmodels summary ----------------------------------------------
+    print("\n")
+    print(result.summary())
+
+    # -- Quick-read summary ----------------------------------------------------
+    print()
+    print("  --- Key results ---------------------------------------------------")
+    for var in ["const"] + REGRESSORS:
+        coef  = result.params[var]
+        pval  = result.pvalues[var]
+        se    = result.bse[var]
+        stars = "***" if pval < 0.01 else "**" if pval < 0.05 else "*" if pval < 0.1 else ""
+        print(
+            f"  {var:<32}  b = {coef:+.4f}  SE = {se:.4f}"
+            f"  p = {pval:.3f}  {stars}"
+        )
+    print(f"\n  R2 = {result.rsquared:.4f}   Adj. R2 = {result.rsquared_adj:.4f}"
+          f"   N = {int(result.nobs)}")
+    print("  -------------------------------------------------------------------")
+    print()
+    print("  Significance: *** p<0.01  ** p<0.05  * p<0.10")
+    print()
+
+
+
+
+print("\n" + "-" * 65)
+print("MODEL 3 -- Full Specification")
+print("  Regressors         : Z_Surprise")
+print("                       Z_Gap")
+print("                       Z_Interaction (int.)")
+print("                       Std_Log_Market_Cap")
+print("                       Sector Fixed Effects")
+print("-" * 65)
+
 
 DEPENDENT  = "CAR_2_60"
 REGRESSORS = ["Z_Surprise", "Z_Gap", "Z_Interaction", "Std_Log_Market_Cap"] + sector_cols
@@ -227,5 +348,5 @@ else:
     print()
     print("  Significance: *** p<0.01  ** p<0.05  * p<0.10")
     print()
-    print("  NOTE: Results are based on the full 10-file dataset.")
+    print("  NOTE: Results are based on the full 1000-file dataset.")
     print()
