@@ -141,8 +141,8 @@ display_cols = [
 ]
 display_cols = [c for c in display_cols if c in df.columns]
 
-print("\nAll events -- key variables:")
-print(df[display_cols].to_string(index=False))
+print("\nPreview of key variables (first 10 rows):")
+print(df[display_cols].head(10).to_string(index=False))
 
 key_vars = ["Z_Surprise", "Z_Gap", "Z_Interaction",
             "Std_Log_Market_Cap", "CAR_0_1", "CAR_2_60"]
