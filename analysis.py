@@ -41,7 +41,7 @@ RAW_DATA_DIR = ROOT / "data" / "raw"
 RESULTS_DIR = ROOT / "results"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
-data_files = list(RAW_DATA_DIR.glob("phase2.xlsx"))
+data_files = list(RAW_DATA_DIR.glob("Data til Advanced Finance seminar v*.xlsx"))
 
 if not data_files:
     sys.exit(
@@ -348,5 +348,5 @@ else:
     print()
     print("  Significance: *** p<0.01  ** p<0.05  * p<0.10")
     print()
-    print("  NOTE: Results are based on the full 10-file dataset.")
+    print("  NOTE: Results are based on the full 1000-file dataset.")
     print()
