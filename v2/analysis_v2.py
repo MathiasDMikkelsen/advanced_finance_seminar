@@ -11,7 +11,7 @@ from scipy import stats
 
 ROOT = Path(__file__).parent.parent
 COMBINED_DATA_FILE = ROOT / "data" / "combined" / "all_relevant_data.csv"
-OUT_DIR = ROOT / "v2"
+OUT_DIR = ROOT / "v2" / "results"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 def main():
