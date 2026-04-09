@@ -1,4 +1,4 @@
-# Advanced Finance Seminar � The Disagreement Gap
+# Advanced Finance Seminar
 
 This repository contains our empirical analysis for the Advanced Finance Seminar at the University of Copenhagen.
 
@@ -17,4 +17,3 @@ We are investigating how the market reacts to the "Disagreement Gap": the diverg
    python v2/robustness_v2.py
    `
    
-The scripts will output the full regression summaries to the console and automatically export the consolidated coefficient tables to the 2/results/ directory.
