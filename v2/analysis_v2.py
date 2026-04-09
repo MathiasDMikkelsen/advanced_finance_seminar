@@ -25,6 +25,8 @@ def main():
     df = pd.read_csv(COMBINED_DATA_FILE)
     print(f"Loaded {len(df)} observations.")
 
+    all_main_results = []
+
     # 1. Variable Construction
     # The user specifies that Guidance Surprise must be scaled by the stock price 5 days 
     # before the announcement to prevent the variable from being dominated by high-priced stocks.
@@ -46,17 +48,18 @@ def main():
 
     # 3. Z-score standardizations
     df["Z_Guidance_Surprise"] = (df["Guidance_Surprise_Win"] - df["Guidance_Surprise_Win"].mean()) / df["Guidance_Surprise_Win"].std()
+    df["Z_Disagreement_Gap"] = (df["Std_Disagreement_Gap_Win"] - df["Std_Disagreement_Gap_Win"].mean()) / df["Std_Disagreement_Gap_Win"].std()
 
     # Log Market Cap
     log_mc = np.log(df["Market_Cap"].replace(0, np.nan))
     df["Std_Log_Market_Cap"] = (log_mc - log_mc.mean()) / log_mc.std()
 
     # Interaction
-    df["Z_Interaction"] = df["Z_Guidance_Surprise"] * df["Std_Disagreement_Gap_Win"]
+    df["Z_Interaction"] = df["Z_Guidance_Surprise"] * df["Z_Disagreement_Gap"]
 
     # Asymmetry & Conditional variables
     df["Negative_Gap_Dummy"] = (df["Std_Disagreement_Gap_Win"] < 0).astype(int)
-    df["Int_Gap_Neg"] = df["Std_Disagreement_Gap_Win"] * df["Negative_Gap_Dummy"]
+    df["Int_Gap_Neg"] = df["Z_Disagreement_Gap"] * df["Negative_Gap_Dummy"]
     df["Beat_Dummy"] = (df["EPS_Beat_Miss"] == "Beat").astype(int)
 
     # Sector Fixed Effects
@@ -123,28 +126,26 @@ def main():
                     "Observations": m["N_Obs"]
                 })
                 
-        pd.DataFrame(summary_data).to_csv(OUT_DIR / out_file, index=False)
-        print(f"\n>> Saved {out_file} to {OUT_DIR}")
+        for item in summary_data:
+            item["Block/File"] = out_file
+            all_main_results.append(item)
+        pass
 
     # =========================================================================
     # BLOCK 1: PEAD Regressions (Short Windows)
     # =========================================================================
-    print("\n" + "=" * 65 + "\nBLOCK 1: Small Windows (CAR_2_5, CAR_2_10, CAR_2_20, CAR_2_30)" + "\n" + "=" * 65)
+    print("\n" + "=" * 65 + "\nBLOCK 1: Small Windows (CAR_2_3, CAR_2_5, CAR_2_7, CAR_2_10, CAR_2_15)" + "\n" + "=" * 65)
     short_models = [
-        run_regression("CAR_2_5", ["Z_Guidance_Surprise", "Std_Disagreement_Gap_Win"] + controls, df, "Model: Key Spec with CAR_2_5"),
-        run_regression("CAR_2_10", ["Z_Guidance_Surprise", "Std_Disagreement_Gap_Win"] + controls, df, "Model: Key Spec with CAR_2_10"),
-        run_regression("CAR_2_20", ["Z_Guidance_Surprise", "Std_Disagreement_Gap_Win"] + controls, df, "Model: Key Spec with CAR_2_20"),
-        run_regression("CAR_2_30", ["Z_Guidance_Surprise", "Std_Disagreement_Gap_Win"] + controls, df, "Model: Key Spec with CAR_2_30")
+        run_regression("CAR_2_3", ["Z_Guidance_Surprise", "Z_Disagreement_Gap"] + controls, df, "Model: Key Spec with CAR_2_3"),
+        run_regression("CAR_2_5", ["Z_Guidance_Surprise", "Z_Disagreement_Gap"] + controls, df, "Model: Key Spec with CAR_2_5"),
+        run_regression("CAR_2_7", ["Z_Guidance_Surprise", "Z_Disagreement_Gap"] + controls, df, "Model: Key Spec with CAR_2_7"),
+        run_regression("CAR_2_10", ["Z_Guidance_Surprise", "Z_Disagreement_Gap"] + controls, df, "Model: Key Spec with CAR_2_10"),
+        run_regression("CAR_2_15", ["Z_Guidance_Surprise", "Z_Disagreement_Gap"] + controls, df, "Model: Key Spec with CAR_2_15")
     ]
     print_and_save_block(short_models, "short_window_pead_results.csv")
-    # =========================================================================
-    print("\n" + "=" * 65 + "\nBLOCK 1: PEAD Regressions (CAR_2_60)" + "\n" + "=" * 65)
-    pead_models = [
-        run_regression("CAR_2_60", ["Z_Guidance_Surprise"] + controls, df, "Model 1: Guidance Surprise Only"),
-        run_regression("CAR_2_60", ["Z_Guidance_Surprise", "Std_Disagreement_Gap_Win"] + controls, df, "Model 2: Add Gap"),
-        run_regression("CAR_2_60", ["Z_Guidance_Surprise", "Std_Disagreement_Gap_Win", "Z_Interaction"] + controls, df, "Model 3: Interaction")
-    ]
-    print_and_save_block(pead_models, "pead_regression_results.csv")
+    
+    # Empty out pead_models since we are not running 2_60
+    pead_models = []
 
     # =========================================================================
     # BLOCK 2: Immediate Reaction (CAR_0_1)
@@ -152,10 +153,10 @@ def main():
     print("\n" + "=" * 65 + "\nBLOCK 2: Immediate Reaction (CAR_0_1)" + "\n" + "=" * 65)
     imm_models = [
         run_regression("CAR_0_1", ["Z_Guidance_Surprise"] + controls, df, "Model 1: Guidance Surprise Only"),
-        run_regression("CAR_0_1", ["Std_Disagreement_Gap_Win"] + controls, df, "Model 2: Pure Predictive Gap"),
-        run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Std_Disagreement_Gap_Win"] + controls, df, "Model 3: Key Specification"),
-        run_regression("CAR_0_1", ["Std_Surprise_EPS_Win", "Std_Disagreement_Gap_Win"] + controls, df, "Model 4: Diagnostic (Old Surprise)"),
-        run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Std_Disagreement_Gap_Win", "Z_Interaction"] + controls, df, "Model 5: Interaction")
+        run_regression("CAR_0_1", ["Z_Disagreement_Gap"] + controls, df, "Model 2: Pure Predictive Gap"),
+        run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Z_Disagreement_Gap"] + controls, df, "Model 3: Key Specification"),
+        run_regression("CAR_0_1", ["Std_Surprise_EPS_Win", "Z_Disagreement_Gap"] + controls, df, "Model 4: Diagnostic (Old Surprise)"),
+        run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Z_Disagreement_Gap", "Z_Interaction"] + controls, df, "Model 5: Interaction")
     ]
     print_and_save_block(imm_models, "immediate_reaction_regression_results.csv")
 
@@ -164,8 +165,8 @@ def main():
     # =========================================================================
     print("\n" + "=" * 65 + "\nBLOCK 3: Quartile Analysis (CAR_0_1 over Std_Disagreement_Gap)" + "\n" + "=" * 65)
     # Remove NaNs first
-    q_df = df[["CAR_0_1", "Std_Disagreement_Gap_Win"]].dropna().copy()
-    q_df["Gap_Q"] = pd.qcut(q_df["Std_Disagreement_Gap_Win"], 4, labels=["Q1", "Q2", "Q3", "Q4"])
+    q_df = df[["CAR_0_1", "Z_Disagreement_Gap"]].dropna().copy()
+    q_df["Gap_Q"] = pd.qcut(q_df["Z_Disagreement_Gap"], 4, labels=["Q1", "Q2", "Q3", "Q4"])
     
     q_stats = q_df.groupby("Gap_Q")["CAR_0_1"].agg(['mean', 'median', 'count']).reset_index()
     q_stats.rename(columns={"mean": "Mean_CAR_0_1", "median": "Median_CAR_0_1", "count": "N"}, inplace=True)
@@ -211,7 +212,7 @@ def main():
     # =========================================================================
     print("\n" + "=" * 65 + "\nBLOCK 4: Robustness (BHAR_2_60)" + "\n" + "=" * 65)
     robust_models = [
-        run_regression("BHAR_2_60", ["Z_Guidance_Surprise", "Std_Disagreement_Gap_Win"] + controls, df, "Model: Key Specification with BHAR_2_60")
+        run_regression("BHAR_2_60", ["Z_Guidance_Surprise", "Z_Disagreement_Gap"] + controls, df, "Model: Key Specification with BHAR_2_60")
     ]
     print_and_save_block(robust_models, "bhar_robustness_results.csv")
 
@@ -221,8 +222,8 @@ def main():
     # =========================================================================
     print("\n" + "=" * 65 + "\nBLOCK 5: Asymmetry Analysis (Negative vs Positive Gaps)\n" + "=" * 65)
     asymmetry_models = [
-        run_regression("CAR_0_1", ["Std_Disagreement_Gap_Win", "Negative_Gap_Dummy", "Int_Gap_Neg"] + controls, df, "Model 1: Asymmetry (No Beat Dummy)"),
-        run_regression("CAR_0_1", ["Std_Disagreement_Gap_Win", "Negative_Gap_Dummy", "Int_Gap_Neg", "Beat_Dummy"] + controls, df, "Model 2: Asymmetry (With Beat Dummy)")
+        run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Z_Disagreement_Gap", "Negative_Gap_Dummy", "Int_Gap_Neg"] + controls, df, "Model 1: Asymmetry (No Beat Dummy)"),
+        run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Z_Disagreement_Gap", "Negative_Gap_Dummy", "Int_Gap_Neg", "Beat_Dummy"] + controls, df, "Model 2: Asymmetry (With Beat Dummy)")
     ]
     print_and_save_block(asymmetry_models, "asymmetry_results.csv")
 
@@ -236,17 +237,17 @@ def main():
     df_beats = df[df["EPS_Beat_Miss"] == "Beat"].copy()
     df_misses = df[df["EPS_Beat_Miss"] == "Miss"].copy()
     
-    beats_model = run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Std_Disagreement_Gap_Win"] + controls, df_beats, "Model: BEATS Only")
-    misses_model = run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Std_Disagreement_Gap_Win"] + controls, df_misses, "Model: MISSES Only")
+    beats_model = run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Z_Disagreement_Gap"] + controls, df_beats, "Model: BEATS Only")
+    misses_model = run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Z_Disagreement_Gap"] + controls, df_misses, "Model: MISSES Only")
     
     conditional_models = [beats_model, misses_model]
     print_and_save_block(conditional_models, "beat_miss_conditional_results.csv")
     
-    print("\n  --- Side-by-Side Comparison (Std_Disagreement_Gap_Win) ---")
+    print("\n  --- Side-by-Side Comparison (Z_Disagreement_Gap) ---")
     b_res = beats_model["Result"]
     m_res = misses_model["Result"]
-    b_coef, b_pval = b_res.params["Std_Disagreement_Gap_Win"], b_res.pvalues["Std_Disagreement_Gap_Win"]
-    m_coef, m_pval = m_res.params["Std_Disagreement_Gap_Win"], m_res.pvalues["Std_Disagreement_Gap_Win"]
+    b_coef, b_pval = b_res.params["Z_Disagreement_Gap"], b_res.pvalues["Z_Disagreement_Gap"]
+    m_coef, m_pval = m_res.params["Z_Disagreement_Gap"], m_res.pvalues["Z_Disagreement_Gap"]
     b_stars = "***" if b_pval < 0.01 else "**" if b_pval < 0.05 else "*" if b_pval < 0.10 else ""
     m_stars = "***" if m_pval < 0.01 else "**" if m_pval < 0.05 else "*" if m_pval < 0.10 else ""
     
@@ -265,8 +266,8 @@ def main():
         print(f"{m['Model']} (Dep: {m['Dep_Var']}):")
         
         gap_sig, surp_sig = "-", "-"
-        if "Std_Disagreement_Gap_Win" in res.params.index:
-            pval = res.pvalues["Std_Disagreement_Gap_Win"]
+        if "Z_Disagreement_Gap" in res.params.index:
+            pval = res.pvalues["Z_Disagreement_Gap"]
             stars = "***" if pval < 0.01 else "**" if pval < 0.05 else "*" if pval < 0.10 else "NS"
             gap_sig = f"{'✅ Sig' if pval < 0.10 else '❌ NS'} ({stars})"
         
@@ -278,6 +279,10 @@ def main():
         print(f"  Z_Guidance_Surprise   : {surp_sig}")
         print(f"  Std_Disagreement_Gap  : {gap_sig}")
     print()
+
+
+    pd.DataFrame(all_main_results).to_csv(OUT_DIR / "all_analysis_results.csv", index=False)
+    print(f"\n>> Successfully combined all results into all_analysis_results.csv")
 
 if __name__ == "__main__":
     main()

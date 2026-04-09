@@ -22,6 +22,8 @@ def main():
     df = pd.read_csv(COMBINED_DATA_FILE)
     print(f"Loaded {len(df)} observations.")
 
+    all_robustness_results = []
+
     # 1. Variable Construction (Matching Key Spec)
     df["Stock_Price_t5"] = df["Actual_EPS"] / df["Std_Actual_EPS"]
     df["Guidance_Surprise_Raw"] = (df["Actual_EPS"] - df["Mgmt_Guidance_EPS"]) / df["Stock_Price_t5"]
@@ -35,6 +37,7 @@ def main():
     df["Std_Disagreement_Gap_Win"] = winsorize_col(df["Std_Disagreement_Gap"])  
 
     df["Z_Guidance_Surprise"] = (df["Guidance_Surprise_Win"] - df["Guidance_Surprise_Win"].mean()) / df["Guidance_Surprise_Win"].std()
+    df["Z_Disagreement_Gap"] = (df["Std_Disagreement_Gap_Win"] - df["Std_Disagreement_Gap_Win"].mean()) / df["Std_Disagreement_Gap_Win"].std()
 
     log_mc = np.log(df["Market_Cap"].replace(0, np.nan))
     df["Std_Log_Market_Cap"] = (log_mc - log_mc.mean()) / log_mc.std()
@@ -86,8 +89,10 @@ def main():
                     "Significance": "***" if m_res.pvalues[var] < 0.01 else "**" if m_res.pvalues[var] < 0.05 else "*" if m_res.pvalues[var] < 0.10 else "",
                     "N_Obs": m["N_Obs"]
                 })
-        pd.DataFrame(summary_data).to_csv(OUT_DIR / filename, index=False)
-        print(f">> Saved {filename}")
+        for item in summary_data:
+            item["Block/File"] = filename
+            all_robustness_results.append(item)
+        pass
 
 
     # ========================================================================= 
@@ -98,20 +103,20 @@ def main():
     df_small = df[df["Market_Cap"] <= med_mc].copy()
     df_large = df[df["Market_Cap"] > med_mc].copy()
 
-    model_small = run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Std_Disagreement_Gap_Win"] + controls, df_small, "Below Median Market Cap")
-    model_large = run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Std_Disagreement_Gap_Win"] + controls, df_large, "Above Median Market Cap")
+    model_small = run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Z_Disagreement_Gap"] + controls, df_small, "Below Median Market Cap")
+    model_large = run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Z_Disagreement_Gap"] + controls, df_large, "Above Median Market Cap")
     
     save_and_print_models([model_small, model_large], "size_subsample_results.csv", print_all_coeffs=False)
 
-    print("\n  --- Side-by-Side Comparison (Std_Disagreement_Gap_Win) ---")
+    print("\n  --- Side-by-Side Comparison (Z_Disagreement_Gap) ---")
     s_res, l_res = model_small["Result"], model_large["Result"]
-    s_p = s_res.pvalues["Std_Disagreement_Gap_Win"]
-    l_p = l_res.pvalues["Std_Disagreement_Gap_Win"]
+    s_p = s_res.pvalues["Z_Disagreement_Gap"]
+    l_p = l_res.pvalues["Z_Disagreement_Gap"]
     s_stars = "***" if s_p < 0.01 else "**" if s_p < 0.05 else "*" if s_p < 0.10 else ""
     l_stars = "***" if l_p < 0.01 else "**" if l_p < 0.05 else "*" if l_p < 0.10 else ""
 
-    print(f"  Below Median (Smaller): b={s_res.params['Std_Disagreement_Gap_Win']:+.4f} (p={s_p:.3f}) {s_stars} [N={model_small['N_Obs']}]")
-    print(f"  Above Median (Larger) : b={l_res.params['Std_Disagreement_Gap_Win']:+.4f} (p={l_p:.3f}) {l_stars} [N={model_large['N_Obs']}]")
+    print(f"  Below Median (Smaller): b={s_res.params['Z_Disagreement_Gap']:+.4f} (p={s_p:.3f}) {s_stars} [N={model_small['N_Obs']}]")
+    print(f"  Above Median (Larger) : b={l_res.params['Z_Disagreement_Gap']:+.4f} (p={l_p:.3f}) {l_stars} [N={model_large['N_Obs']}]")
 
 
     # ========================================================================= 
@@ -123,14 +128,27 @@ def main():
     # Create the interaction terms manually so we can inspect them in the results
     for col in sector_cols:
         inter_name = f"Int_Gap_{col}"
-        df[inter_name] = df["Std_Disagreement_Gap_Win"] * df[col]
+        df[inter_name] = df["Z_Disagreement_Gap"] * df[col]
         sector_inter_cols.append(inter_name)
         
-    model_sector = run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Std_Disagreement_Gap_Win"] + sector_inter_cols + controls, df, "Sector Heterogeneity")
+    model_sector = run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Z_Disagreement_Gap"] + sector_inter_cols + controls, df, "Sector Heterogeneity")
     save_and_print_models([model_sector], "sector_heterogeneity_results.csv", print_all_coeffs=True)
+    
+    # Joint F-test
+    m_res = model_sector["Result"]
+    f_test = m_res.f_test(" = 0, ".join(sector_inter_cols) + " = 0")
+    f_stat = float(np.squeeze(f_test.fvalue))
+    p_val = float(np.squeeze(f_test.pvalue))
+    print(f"\n--- Joint F-Test: Sector Interactions ---")
+    print(f"H0: Interaction terms are jointly zero (No sector heterogeneity)")
+    print(f"F-Statistic: {f_stat:.4f}  (p-value: {p_val:.4f})")
+    if p_val < 0.05:
+        print(">> Rejected H0: Significant sector heterogeneity exists.")
+    else:
+        print(">> Failed to reject H0: Sector heterogeneity is not jointly significant.")
 
 
-    # ========================================================================= 
+    # =========================================================================
     # 3. Announcement Timing Subsamples
     # ========================================================================= 
     print("\n" + "=" * 65 + "\n3. Announcement Timing Subsamples\n" + "=" * 65)
@@ -157,32 +175,32 @@ def main():
 
     models_timing = []
     if len(df_pre) > 30: # Need enough obs
-        models_timing.append(run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Std_Disagreement_Gap_Win"] + controls, df_pre, "Pre-Market"))
-    models_timing.append(run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Std_Disagreement_Gap_Win"] + controls, df_during, "During-Market"))
-    models_timing.append(run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Std_Disagreement_Gap_Win"] + controls, df_post, "Post-Market"))
+        models_timing.append(run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Z_Disagreement_Gap"] + controls, df_pre, "Pre-Market"))
+    models_timing.append(run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Z_Disagreement_Gap"] + controls, df_during, "During-Market"))
+    models_timing.append(run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Z_Disagreement_Gap"] + controls, df_post, "Post-Market"))
 
     save_and_print_models(models_timing, "announcement_timing_results.csv", print_all_coeffs=False)
 
-    print("\n  --- Side-by-Side Comparison (Std_Disagreement_Gap_Win) ---")
+    print("\n  --- Side-by-Side Comparison (Z_Disagreement_Gap) ---")
     for m in models_timing:
         res = m["Result"]
-        coef, p = res.params["Std_Disagreement_Gap_Win"], res.pvalues["Std_Disagreement_Gap_Win"]
+        coef, p = res.params["Z_Disagreement_Gap"], res.pvalues["Z_Disagreement_Gap"]
         stars = "***" if p < 0.01 else "**" if p < 0.05 else "*" if p < 0.10 else ""
         print(f"  {m['Model']:<15}: b={coef:+.4f} (p={p:.3f}) {stars} [N={m['N_Obs']}]")
 
 
-    # ========================================================================= 
+    # =========================================================================
     # 4. Non-Linearity (Squared Gap)
-    # ========================================================================= 
+    # =========================================================================
     print("\n" + "=" * 65 + "\n4. Non-Linear Relationship (Squared Gap)\n" + "=" * 65)
-    df["Std_Disagreement_Gap_Win_Sq"] = df["Std_Disagreement_Gap_Win"] ** 2
+    df["Z_Disagreement_Gap_Sq"] = df["Z_Disagreement_Gap"] ** 2
 
-    model_nl = run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Std_Disagreement_Gap_Win", "Std_Disagreement_Gap_Win_Sq"] + controls, df, "Non-Linear Gap Effect")
+    model_nl = run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Z_Disagreement_Gap", "Z_Disagreement_Gap_Sq"] + controls, df, "Non-Linear Gap Effect")
     save_and_print_models([model_nl], "nonlinear_results.csv", print_all_coeffs=False)
 
     nl_res = model_nl["Result"]
-    c1, p1 = nl_res.params["Std_Disagreement_Gap_Win"], nl_res.pvalues["Std_Disagreement_Gap_Win"]
-    c2, p2 = nl_res.params["Std_Disagreement_Gap_Win_Sq"], nl_res.pvalues["Std_Disagreement_Gap_Win_Sq"]
+    c1, p1 = nl_res.params["Z_Disagreement_Gap"], nl_res.pvalues["Z_Disagreement_Gap"]
+    c2, p2 = nl_res.params["Z_Disagreement_Gap_Sq"], nl_res.pvalues["Z_Disagreement_Gap_Sq"]
     
     s1 = "***" if p1 < 0.01 else "**" if p1 < 0.05 else "*" if p1 < 0.10 else ""
     s2 = "***" if p2 < 0.01 else "**" if p2 < 0.05 else "*" if p2 < 0.10 else ""
@@ -195,10 +213,14 @@ def main():
     print("\n" + "=" * 65 + "\nOVERALL SUMMARY OF SIGNIFICANCE (Std_Disagreement_Gap)\n" + "=" * 65)
     summ_models = [model_small, model_large, model_sector] + models_timing + [model_nl]
     for m in summ_models:
-        pval = m["Result"].pvalues["Std_Disagreement_Gap_Win"]
+        pval = m["Result"].pvalues["Z_Disagreement_Gap"]
         stars = "***" if pval < 0.01 else "**" if pval < 0.05 else "*" if pval < 0.10 else "NS"
         sig = f"{'✅ Sig' if pval < 0.10 else '❌ NS'} ({stars})"
         print(f"  {m['Model']:<30}: {sig}")
     
+
+    pd.DataFrame(all_robustness_results).to_csv(OUT_DIR / "all_robustness_results.csv", index=False)
+    print(f"\n>> Successfully combined all results into all_robustness_results.csv")
+
 if __name__ == "__main__":
     main()

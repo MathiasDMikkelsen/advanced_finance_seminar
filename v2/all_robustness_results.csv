@@ -1,0 +1,96 @@
+Model,Variable,Coefficient,Std_Error,p_value,Significance,N_Obs,Block/File
+Below Median Market Cap,const,0.0038207399205809267,0.01009384166312576,0.7050429430598137,,500,size_subsample_results.csv
+Below Median Market Cap,Z_Guidance_Surprise,0.007129063253356811,0.004286081521480294,0.09625128501729309,*,500,size_subsample_results.csv
+Below Median Market Cap,Z_Disagreement_Gap,0.0132266541673422,0.004133774733881997,0.0013759204526071934,***,500,size_subsample_results.csv
+Below Median Market Cap,Std_Log_Market_Cap,-0.007055831866936718,0.006881991176093141,0.305240414963624,,500,size_subsample_results.csv
+Below Median Market Cap,Sector_Consumer Discretionary,-0.01477857471627841,0.009213311484291668,0.10870393059113892,,500,size_subsample_results.csv
+Below Median Market Cap,Sector_Consumer Staples,-0.009312741126784568,0.011038085966750271,0.3988417264074975,,500,size_subsample_results.csv
+Below Median Market Cap,Sector_Energy,-0.009651155901937278,0.00833934251904475,0.2471481089904607,,500,size_subsample_results.csv
+Below Median Market Cap,Sector_Financials,-0.006386548681264812,0.009827220171621735,0.5157674480406488,,500,size_subsample_results.csv
+Below Median Market Cap,Sector_Health Care,-0.028933883104986555,0.020016329539471512,0.14831358413097714,,500,size_subsample_results.csv
+Below Median Market Cap,Sector_Industrials,0.006852980241581128,0.013431926080603547,0.6099107495515927,,500,size_subsample_results.csv
+Below Median Market Cap,Sector_Information Technology,0.015491267030468703,0.014293610150582793,0.27845806633148673,,500,size_subsample_results.csv
+Below Median Market Cap,Sector_Materials,-0.013105935081922827,0.008557874974678279,0.12565886552170832,,500,size_subsample_results.csv
+Below Median Market Cap,Sector_Real Estate,0.01940743146236138,0.008623445174968073,0.02441451703739821,**,500,size_subsample_results.csv
+Below Median Market Cap,Sector_Utilities,0.004087292317014897,0.007195921550531679,0.5700341303521363,,500,size_subsample_results.csv
+Above Median Market Cap,const,0.007989451574933745,0.007773255690789294,0.30403790140143916,,500,size_subsample_results.csv
+Above Median Market Cap,Z_Guidance_Surprise,0.04304385695007491,0.01484248432589922,0.0037311033441313674,***,500,size_subsample_results.csv
+Above Median Market Cap,Z_Disagreement_Gap,0.048947493952683996,0.016549315476116266,0.0030996890962953494,***,500,size_subsample_results.csv
+Above Median Market Cap,Std_Log_Market_Cap,0.006760993672244028,0.0029723552385117627,0.02292843230073563,**,500,size_subsample_results.csv
+Above Median Market Cap,Sector_Consumer Discretionary,-0.02477750342983434,0.01176130873741899,0.03514392914621911,**,500,size_subsample_results.csv
+Above Median Market Cap,Sector_Consumer Staples,-0.00871423901375069,0.012383423955312946,0.4816184344531551,,500,size_subsample_results.csv
+Above Median Market Cap,Sector_Energy,-0.015839718213899477,0.009514304235597805,0.09594627640001509,*,500,size_subsample_results.csv
+Above Median Market Cap,Sector_Financials,-0.013507616950624461,0.008066687583368532,0.09403362583167392,*,500,size_subsample_results.csv
+Above Median Market Cap,Sector_Health Care,-0.013231080255376086,0.008221777533160881,0.10755677562444363,,500,size_subsample_results.csv
+Above Median Market Cap,Sector_Industrials,-0.015181507147331732,0.009584870529029597,0.11321574801448468,,500,size_subsample_results.csv
+Above Median Market Cap,Sector_Information Technology,-0.018399219077923468,0.010089831053135706,0.06822151619414828,*,500,size_subsample_results.csv
+Above Median Market Cap,Sector_Materials,-0.020888632412998303,0.010829705719665985,0.05375230125263082,*,500,size_subsample_results.csv
+Above Median Market Cap,Sector_Real Estate,0.0019079752668940391,0.01338066822183694,0.8866124736123702,,500,size_subsample_results.csv
+Above Median Market Cap,Sector_Utilities,0.0017136064301531417,0.009560687655178248,0.8577534636689131,,500,size_subsample_results.csv
+Sector Heterogeneity,const,0.01687120720870846,0.004462529873865537,0.0001564273790681917,***,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Z_Guidance_Surprise,0.013713611900380215,0.004008784628301427,0.0006241653477465449,***,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Z_Disagreement_Gap,0.01870114344682424,0.00441886398239206,2.315033018303451e-05,***,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Int_Gap_Sector_Consumer Discretionary,0.0091863375036823,0.007622400720403925,0.2281352087335764,,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Int_Gap_Sector_Consumer Staples,-0.00013825090818616074,0.006536120911316193,0.9831245410098055,,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Int_Gap_Sector_Energy,0.004647503546298692,0.00987654939273824,0.6379553782237868,,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Int_Gap_Sector_Financials,0.0001768303327939751,0.004905899893249128,0.9712469372184983,,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Int_Gap_Sector_Health Care,-0.004867860645654152,0.006267573782215998,0.4373512200764482,,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Int_Gap_Sector_Industrials,-0.003040802013755092,0.014206183683565653,0.8305098010886323,,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Int_Gap_Sector_Information Technology,-0.008300601013325914,0.009279577741243253,0.37105335067624934,,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Int_Gap_Sector_Materials,0.002105840381158057,0.007099988679307375,0.7667736596300282,,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Int_Gap_Sector_Real Estate,-0.0010107888678790409,0.011644937478291142,0.9308299214239735,,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Int_Gap_Sector_Utilities,-0.009680256630473175,0.004724826797641401,0.04048102385799826,**,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Std_Log_Market_Cap,0.0004470029361519171,0.0018934025101489747,0.8133671212088596,,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Sector_Consumer Discretionary,-0.027465052254586713,0.006945874493066872,7.680616817423968e-05,***,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Sector_Consumer Staples,-0.015921938532905834,0.0071618494694745015,0.026205001071159716,**,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Sector_Energy,-0.020232487666302378,0.006937530026753565,0.003541166486693656,***,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Sector_Financials,-0.017011051922631904,0.00549908113778266,0.0019785366365547862,***,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Sector_Health Care,-0.02265674797550572,0.009081862979859879,0.012605488425959087,**,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Sector_Industrials,-0.013372454698352272,0.00700009319755647,0.0560913502961046,*,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Sector_Information Technology,-0.014902681447338318,0.0077882432496320176,0.05568607717324767,*,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Sector_Materials,-0.02132648795116913,0.007004178764743866,0.0023281691268649657,***,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Sector_Real Estate,0.005749290350771858,0.013088013877939085,0.6604593497295572,,1000,sector_heterogeneity_results.csv
+Sector Heterogeneity,Sector_Utilities,-0.0023233339078216186,0.0065172348970243855,0.7214730837051586,,1000,sector_heterogeneity_results.csv
+During-Market,const,0.012625501328539845,0.006656535924615914,0.057866558931342786,*,570,announcement_timing_results.csv
+During-Market,Z_Guidance_Surprise,0.010699604855836436,0.005401787133632985,0.047619005148882676,**,570,announcement_timing_results.csv
+During-Market,Z_Disagreement_Gap,0.015272708709986718,0.006127982661684451,0.012692243016876223,**,570,announcement_timing_results.csv
+During-Market,Std_Log_Market_Cap,6.639472490539168e-05,0.0026855348056701862,0.9802758357078372,,570,announcement_timing_results.csv
+During-Market,Sector_Consumer Discretionary,-0.013375206242644148,0.009148976470323315,0.14375910283049276,,570,announcement_timing_results.csv
+During-Market,Sector_Consumer Staples,-0.009365072976700532,0.009196763519986804,0.30853495980211343,,570,announcement_timing_results.csv
+During-Market,Sector_Energy,-0.016640639048725137,0.00829814926002383,0.04492634554948819,**,570,announcement_timing_results.csv
+During-Market,Sector_Financials,-0.006778647291871661,0.007713790233161969,0.3795260061400987,,570,announcement_timing_results.csv
+During-Market,Sector_Health Care,-0.014433504414831261,0.008898114392269264,0.10478499232467509,,570,announcement_timing_results.csv
+During-Market,Sector_Industrials,-0.008538183840768192,0.008542962544243147,0.31758128740559,,570,announcement_timing_results.csv
+During-Market,Sector_Information Technology,-0.007252268617360434,0.012698803468723527,0.567932821712906,,570,announcement_timing_results.csv
+During-Market,Sector_Materials,-0.012588774365343853,0.0072605672901460494,0.08294372926962913,*,570,announcement_timing_results.csv
+During-Market,Sector_Real Estate,0.005704518519809824,0.01765702410903721,0.7466394956875582,,570,announcement_timing_results.csv
+During-Market,Sector_Utilities,0.0011383206099113664,0.0083632442290815,0.8917343753768223,,570,announcement_timing_results.csv
+Post-Market,const,0.020956738818014416,0.006665728352812166,0.0016668202331054155,***,428,announcement_timing_results.csv
+Post-Market,Z_Guidance_Surprise,0.015901607644644798,0.005441348753719834,0.003473840777620038,***,428,announcement_timing_results.csv
+Post-Market,Z_Disagreement_Gap,0.017488692139847294,0.005353061180026404,0.0010867637724046,***,428,announcement_timing_results.csv
+Post-Market,Std_Log_Market_Cap,0.0005215955298580366,0.0027654286490739646,0.8503962179766758,,428,announcement_timing_results.csv
+Post-Market,Sector_Consumer Discretionary,-0.03605965288606863,0.010951037561844401,0.0009919254776520423,***,428,announcement_timing_results.csv
+Post-Market,Sector_Consumer Staples,-0.033039729543063195,0.009271979058300303,0.00036608830681519026,***,428,announcement_timing_results.csv
+Post-Market,Sector_Energy,-0.017261063869415443,0.008876871911591375,0.051835369488745314,*,428,announcement_timing_results.csv
+Post-Market,Sector_Financials,-0.034780426098677,0.009840677918560786,0.0004087752829994146,***,428,announcement_timing_results.csv
+Post-Market,Sector_Health Care,-0.029480766497412207,0.01787677362369068,0.09912509735694155,*,428,announcement_timing_results.csv
+Post-Market,Sector_Industrials,-0.02688050415861938,0.013896966835389669,0.05307977953252078,*,428,announcement_timing_results.csv
+Post-Market,Sector_Information Technology,-0.019005607683154156,0.009423694150010932,0.04371748217040079,**,428,announcement_timing_results.csv
+Post-Market,Sector_Materials,-0.03796379980897285,0.0154178267388183,0.013803703260678148,**,428,announcement_timing_results.csv
+Post-Market,Sector_Real Estate,0.0010523562378234631,0.009025713062395708,0.9071807171074218,,428,announcement_timing_results.csv
+Post-Market,Sector_Utilities,-0.008405462292627197,0.010662975363553557,0.4305300877034849,,428,announcement_timing_results.csv
+Non-Linear Gap Effect,const,0.015314093858317213,0.00445536681768427,0.0005877092943876673,***,1000,nonlinear_results.csv
+Non-Linear Gap Effect,Z_Guidance_Surprise,0.01255111712743287,0.0038243458499693933,0.0010311050130455011,***,1000,nonlinear_results.csv
+Non-Linear Gap Effect,Z_Disagreement_Gap,0.01801673971036314,0.004298892811080902,2.7770489620895233e-05,***,1000,nonlinear_results.csv
+Non-Linear Gap Effect,Z_Disagreement_Gap_Sq,0.0008018102904848681,0.0006901461500152683,0.24531760101708078,,1000,nonlinear_results.csv
+Non-Linear Gap Effect,Std_Log_Market_Cap,0.0006697957125767894,0.0019299860079027699,0.7285560646523004,,1000,nonlinear_results.csv
+Non-Linear Gap Effect,Sector_Consumer Discretionary,-0.024185869461875936,0.006976083060916053,0.0005263609774132899,***,1000,nonlinear_results.csv
+Non-Linear Gap Effect,Sector_Consumer Staples,-0.01521175026377668,0.006983902497786946,0.02939739646202783,**,1000,nonlinear_results.csv
+Non-Linear Gap Effect,Sector_Energy,-0.017164822999455275,0.0055335400930035935,0.001922435841107059,***,1000,nonlinear_results.csv
+Non-Linear Gap Effect,Sector_Financials,-0.016513505077786515,0.005383178101663144,0.002157761365211781,***,1000,nonlinear_results.csv
+Non-Linear Gap Effect,Sector_Health Care,-0.020413946933936895,0.00836901344356581,0.014718605412884769,**,1000,nonlinear_results.csv
+Non-Linear Gap Effect,Sector_Industrials,-0.012907240177927999,0.006510810195753999,0.04743088185542622,**,1000,nonlinear_results.csv
+Non-Linear Gap Effect,Sector_Information Technology,-0.013572565340325748,0.007553702427096253,0.07236584541513298,*,1000,nonlinear_results.csv
+Non-Linear Gap Effect,Sector_Materials,-0.021677259124334908,0.006465815102114659,0.0008005777270051701,***,1000,nonlinear_results.csv
+Non-Linear Gap Effect,Sector_Real Estate,0.007607914509017745,0.007515535604060591,0.3113985897334698,,1000,nonlinear_results.csv
+Non-Linear Gap Effect,Sector_Utilities,-0.0022423540075000425,0.005996229948214337,0.7084335975017038,,1000,nonlinear_results.csv
