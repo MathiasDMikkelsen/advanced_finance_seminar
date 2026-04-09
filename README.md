@@ -1,88 +1,20 @@
-# Advanced Finance Seminar — PEAD Analysis
+# Advanced Finance Seminar � The Disagreement Gap
 
-> **Course**: Advanced Finance Seminar, 8th semester  
-> **University**: University of Copenhagen  
-> **Topic**: Post-Earnings Announcement Drift (PEAD)
+This repository contains our empirical analysis for the Advanced Finance Seminar at the University of Copenhagen.
 
----
+## Purpose
+We are investigating how the market reacts to the "Disagreement Gap": the divergence between Management Earnings Guidance and Analyst Consensus estimates. Our research examines both the immediate market reaction (CAR 0 to 1) and the short-window Post-Earnings Announcement Drift (PEAD, looking at windows from 2 to 15 days). We utilize standardized Z-scores to evaluate how this informational complexity impacts price discovery, including tests for asymmetry and various cross-sectional robustness checks.
 
-## Hypothesis
-
-A larger disagreement gap (Management Guidance EPS − Analyst Consensus EPS) creates informational complexity, causing an initial underreaction on the announcement day and a stronger PEAD over the following 60 trading days.
-
-**Main regression:**
-```
-CAR_2_60 = α + β1·Std_Surprise_EPS + β2·Std_Disagreement_Gap
-         + β3·(Std_Surprise_EPS × Std_Disagreement_Gap) + Controls + ε
-```
-
----
-
-## Project structure
-
-```
-advanced_finance_seminar/
-├── data/
-│   └── raw/
-│       └── testdata_clean.xlsx   ← PUT THE EXCEL FILE HERE
-├── results/                ← CSV output from the regression (auto-created)
-├── analysis.py             ← MAIN SCRIPT — run this
-├── requirements.txt
-└── README.md
-```
-
----
-
-## Setup (first time only)
-
-### 1. Activate the virtual environment
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-### 2. Install dependencies (already done, but in case of a fresh clone)
-
-```powershell
-pip install -r requirements.txt
-```
-
----
-
-## How to run
-
-1. Place `testdata_clean` in `data/raw/`.
-2. Open `analysis.py` in VS Code.
-3. Run it — either press **F5** or in the terminal:
-
-```powershell
-python analysis.py
-```
-
-The script will print the parsed CARs, constructed variables, descriptive
-statistics, and the full regression summary to the console.  
-The coefficient table is also saved to `results/regression_results.csv`.
-
----
-
-## Data file location
-
-Both partners should place the Excel file at:
-```
-data/raw/testdata_clean.xlsx
-```
-This path is **relative to the project root**, so it works on any machine
-as long as the folder structure is intact.  
-The `data/raw/` folder is listed in `.gitignore` — data files are **not**
-committed to Git (to keep the repo lightweight and avoid sharing large files
-via version control).
-
----
-
-## Key dependencies
-
-| Package | Purpose |
-|---|---|
-| `pandas` | Data loading and wrangling |
-| `numpy` | Numerical operations |
-| `statsmodels` | OLS regression with robust standard errors |
+## How to Run
+1. Activate the virtual environment:
+   `powershell
+   .\.venv\Scripts\Activate.ps1
+   `
+2. Ensure dependencies are up to date (pip install -r requirements.txt).
+3. Execute the analysis scripts from the root of the project:
+   `powershell
+   python v2/analysis_v2.py
+   python v2/robustness_v2.py
+   `
+   
+The scripts will output the full regression summaries to the console and automatically export the consolidated coefficient tables to the 2/results/ directory.
