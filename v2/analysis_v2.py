@@ -51,8 +51,8 @@ def main():
     df["Z_Disagreement_Gap"] = (df["Std_Disagreement_Gap_Win"] - df["Std_Disagreement_Gap_Win"].mean()) / df["Std_Disagreement_Gap_Win"].std()
 
     # Log Market Cap
-    log_mc = np.log(df["Market_Cap"].replace(0, np.nan))
-    df["Std_Log_Market_Cap"] = (log_mc - log_mc.mean()) / log_mc.std()
+    df["Log_Market_Cap"] = np.log(df["Market_Cap"].replace(0, np.nan))
+    df["Std_Log_Market_Cap"] = (df["Log_Market_Cap"] - df["Log_Market_Cap"].mean()) / df["Log_Market_Cap"].std()
 
     # Interaction
     df["Z_Interaction"] = df["Z_Guidance_Surprise"] * df["Z_Disagreement_Gap"]
@@ -74,9 +74,8 @@ def main():
     # Descriptive Statistics
     # =========================================================================
     desc_vars = [
-        "Guidance_Surprise_Raw", "Guidance_Surprise_Win", "Z_Guidance_Surprise",
-        "Std_Disagreement_Gap", "Std_Disagreement_Gap_Win", "Z_Disagreement_Gap", 
-        "Negative_Gap_Dummy", "Int_Gap_Neg"
+        "Guidance_Surprise_Raw", "Std_Disagreement_Gap", "Log_Market_Cap", 
+        "Negative_Gap_Dummy", "CAR_0_1", "CAR_2_15"
     ]
     print("\n" + "=" * 65 + "\nDESCRIPTIVE STATISTICS\n" + "=" * 65)
     desc_stats = df[desc_vars].describe().round(4)
