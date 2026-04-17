@@ -70,6 +70,21 @@ def main():
     # Base controls
     controls = ["Std_Log_Market_Cap"] + sector_cols
     
+    # =========================================================================
+    # Descriptive Statistics
+    # =========================================================================
+    desc_vars = [
+        "Guidance_Surprise_Raw", "Guidance_Surprise_Win", "Z_Guidance_Surprise",
+        "Std_Disagreement_Gap", "Std_Disagreement_Gap_Win", "Z_Disagreement_Gap", 
+        "Negative_Gap_Dummy", "Int_Gap_Neg"
+    ]
+    print("\n" + "=" * 65 + "\nDESCRIPTIVE STATISTICS\n" + "=" * 65)
+    desc_stats = df[desc_vars].describe().round(4)
+    print(desc_stats.to_string())
+    print()
+    desc_stats.to_csv(OUT_DIR / "descriptive_statistics.csv")
+    print(f">> Saved descriptive_statistics.csv to {OUT_DIR}")
+    
     def run_regression(dep_var, indep_vars, df_reg, model_name=""):
         req_cols = ["Ticker", dep_var] + indep_vars
         df_clean = df_reg[req_cols].dropna()
