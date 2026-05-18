@@ -209,9 +209,52 @@ def main():
     print(f"  Linear Term : b={c1:+.4f} (p={p1:.3f}) {s1}")
     print(f"  Squared Term: b={c2:+.4f} (p={p2:.3f}) {s2}")
     
+    # =========================================================================
+    # 5. Alternative Dependent Variable (BHAR)
+    # =========================================================================
+    print("\n" + "=" * 65 + "\n5. Alternative Dependent Variable (BHAR_2_15)\n" + "=" * 65)
+    
+    # Calculate BHAR_2_15 dynamically from daily returns
+    print("Loading daily returns to compute BHAR_2_15...")
+    daily_file = ROOT / "data" / "combined" / "all_daily_returns.csv"
+    if daily_file.exists():
+        df_daily = pd.read_csv(daily_file, low_memory=False)
+        col_names = df_daily.columns.tolist()
+        event_indices = [i for i, col in enumerate(col_names) if '|' in str(col)]
+        
+        bhar_results = []
+        for i in event_indices:
+            event_id = str(col_names[i]).strip()
+            
+            trd_day = pd.to_numeric(df_daily.iloc[:, i+4], errors='coerce')
+            ret = pd.to_numeric(df_daily.iloc[:, i+1], errors='coerce') / 100.0
+            mkt_ret = pd.to_numeric(df_daily.iloc[:, i+3], errors='coerce') / 100.0
+            
+            df_event = pd.DataFrame({'Trd_Day': trd_day, 'Return': ret, 'Mkt_Return': mkt_ret}).dropna()
+            df_period = df_event[(df_event['Trd_Day'] >= 2) & (df_event['Trd_Day'] <= 15)]
+            
+            if len(df_period) > 0:
+                bhar_2_15 = np.prod(1 + df_period['Return']) - np.prod(1 + df_period['Mkt_Return'])
+            else:
+                bhar_2_15 = np.nan
+                
+            bhar_results.append({'Event_ID': event_id, 'BHAR_2_15': bhar_2_15})
+            
+        df_bhar = pd.DataFrame(bhar_results)
+        
+        # Merge into the main dataframe
+        if 'BHAR_2_15' in df.columns:
+            df = df.drop(columns=['BHAR_2_15'])
+        df = pd.merge(df, df_bhar, on='Event_ID', how='left')
+    else:
+        print("Warning: all_daily_returns.csv not found. Skipping BHAR_2_15 calculation.")
+
+    model_bhar = run_regression("BHAR_2_15", ["Z_Guidance_Surprise", "Z_Disagreement_Gap"] + controls, df, "Model: BHAR_2_15")
+    save_and_print_models([model_bhar], "bhar_robustness_results.csv", print_all_coeffs=False)
+
     # Summary
     print("\n" + "=" * 65 + "\nOVERALL SUMMARY OF SIGNIFICANCE (Std_Disagreement_Gap)\n" + "=" * 65)
-    summ_models = [model_small, model_large, model_sector] + models_timing + [model_nl]
+    summ_models = [model_small, model_large, model_sector] + models_timing + [model_nl, model_bhar]
     for m in summ_models:
         pval = m["Result"].pvalues["Z_Disagreement_Gap"]
         stars = "***" if pval < 0.01 else "**" if pval < 0.05 else "*" if pval < 0.10 else "NS"

@@ -158,9 +158,6 @@ def main():
     ]
     print_and_save_block(short_models, "short_window_pead_results.csv")
     
-    # Empty out pead_models since we are not running 2_60
-    pead_models = []
-
     # =========================================================================
     # BLOCK 2: Immediate Reaction (CAR_0_1)
     # =========================================================================
@@ -188,7 +185,8 @@ def main():
     q1_vals = q_df[q_df["Gap_Q"] == "Q1"]["CAR_0_1"]
     q4_vals = q_df[q_df["Gap_Q"] == "Q4"]["CAR_0_1"]
     
-    t_stat, p_val_t = stats.ttest_ind(q4_vals, q1_vals)
+    # Welch's t-test (unequal variances assumed for better robustness)
+    t_stat, p_val_t = stats.ttest_ind(q4_vals, q1_vals, equal_var=False)
     spread = q4_vals.mean() - q1_vals.mean()
     
     f_stat, p_val_f = stats.f_oneway(
@@ -222,19 +220,9 @@ def main():
     print(f">> Saved quartile_analysis_results.csv to {OUT_DIR}")
 
     # =========================================================================
-    # BLOCK 4: Robustness (BHAR_2_60)
+    # BLOCK 4: Asymmetry Analysis (Negative vs Positive Gaps)
     # =========================================================================
-    print("\n" + "=" * 65 + "\nBLOCK 4: Robustness (BHAR_2_60)" + "\n" + "=" * 65)
-    robust_models = [
-        run_regression("BHAR_2_60", ["Z_Guidance_Surprise", "Z_Disagreement_Gap"] + controls, df, "Model: Key Specification with BHAR_2_60")
-    ]
-    print_and_save_block(robust_models, "bhar_robustness_results.csv")
-
-
-    # =========================================================================
-    # BLOCK 5: Asymmetry Analysis (Negative vs Positive Gaps)
-    # =========================================================================
-    print("\n" + "=" * 65 + "\nBLOCK 5: Asymmetry Analysis (Negative vs Positive Gaps)\n" + "=" * 65)
+    print("\n" + "=" * 65 + "\nBLOCK 4: Asymmetry Analysis (Negative vs Positive Gaps)\n" + "=" * 65)
     asymmetry_models = [
         run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Z_Disagreement_Gap", "Negative_Gap_Dummy", "Int_Gap_Neg"] + controls, df, "Model 1: Asymmetry (No Beat Dummy)"),
         run_regression("CAR_0_1", ["Z_Guidance_Surprise", "Z_Disagreement_Gap", "Negative_Gap_Dummy", "Int_Gap_Neg", "Beat_Dummy"] + controls, df, "Model 2: Asymmetry (With Beat Dummy)")
@@ -242,9 +230,9 @@ def main():
     print_and_save_block(asymmetry_models, "asymmetry_results.csv")
 
     # =========================================================================
-    # BLOCK 6: Conditional Analysis (Beats vs Misses)
+    # BLOCK 5: Conditional Analysis (Beats vs Misses)
     # =========================================================================
-    print("\n" + "=" * 65 + "\nBLOCK 6: Conditional Analysis (Beats vs Misses)\n" + "=" * 65)
+    print("\n" + "=" * 65 + "\nBLOCK 5: Conditional Analysis (Beats vs Misses)\n" + "=" * 65)
     print("\n  [!] WARNING: EPS_Beat_Miss is revealed SIMULTANEOUSLY with CAR_0_1.")
     print("      This test should be interpreted as a decomposition of the reaction, NOT a predictive test.\n")
     
@@ -274,7 +262,7 @@ def main():
     # =========================================================================
     print("\n" + "=" * 65 + "\nSUMMARY OF SIGNIFICANCE\n" + "=" * 65)
     
-    all_models = short_models + pead_models + imm_models + robust_models + asymmetry_models + conditional_models
+    all_models = short_models + imm_models + asymmetry_models + conditional_models
     for m in all_models:
         res = m["Result"]
         print(f"{m['Model']} (Dep: {m['Dep_Var']}):")
