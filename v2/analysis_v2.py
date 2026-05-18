@@ -28,9 +28,8 @@ def main():
     all_main_results = []
 
     # 1. Variable Construction
-    # The user specifies that Guidance Surprise must be scaled by the stock price 5 days 
-    # before the announcement to prevent the variable from being dominated by high-priced stocks.
-    # We recover that historical Price_t-5 using the pre-scaled Bloomberg columns.
+    # Scale Guidance Surprise by the stock price 5 days prior to the announcement
+    # to prevent the variable from being dominated by high-priced stocks.
     df["Stock_Price_t5"] = df["Actual_EPS"] / df["Std_Actual_EPS"]
     
     # Construct explicitly: (Actual EPS - Mgmt Guidance EPS) / Price_t-5
@@ -112,7 +111,7 @@ def main():
             
             # Print core metrics
             for var in ["const"] + list(m_res.params.index)[1:]:
-                # Only print the coefficients that aren't sector fixed effects for brevity in console
+                # Exclude sector fixed effects for console brevity
                 if var.startswith("Sector_"): continue
                 
                 coef = m_res.params[var]

@@ -125,7 +125,7 @@ def main():
     print("\n" + "=" * 65 + "\n2. Sector Heterogeneity (Interactions)\n" + "=" * 65)
     
     sector_inter_cols = []
-    # Create the interaction terms manually so we can inspect them in the results
+    # Create interaction terms iteratively to allow coefficient inspection
     for col in sector_cols:
         inter_name = f"Int_Gap_{col}"
         df[inter_name] = df["Z_Disagreement_Gap"] * df[col]
@@ -158,17 +158,14 @@ def main():
         t_str = str(t).replace(':', '')
         try:
             val = int(t_str)
-            # Rough proxy: before 09:30 vs after 16:00
-            # Depending on data formats some use 24h, let's treat anything above 1600 or roughly PM as Post, <930 as Pre
+            # Classify timing bounds (09:30 and 16:00)
             if val < 930: return 'Pre-Market'
             elif val >= 1600: return 'Post-Market'
-            else: return 'During-Market' # Might include Pre-Market depending on time format logic if times are e.g., 8:00=800
+            else: return 'During-Market'
         except: return 'Unknown'
         
     df["Timing_Cat"] = df["Announcement_Time"].apply(classify_time)
     
-    # Looking at the data earlier, most times are 11:30, 12:00, 22:00. This implies UTC or another timezone for a US dataset? 
-    # Let's just blindly use our rough proxy. If it doesn't split well we will reconsider.
     df_pre = df[df["Timing_Cat"] == "Pre-Market"].copy()
     df_post = df[df["Timing_Cat"] == "Post-Market"].copy()
     df_during = df[df["Timing_Cat"] == "During-Market"].copy()

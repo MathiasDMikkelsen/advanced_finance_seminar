@@ -24,8 +24,7 @@ def update_file(filepath, global_var_name, out_filename):
 
     # Special case for quartile analysis list in analysis_v2
     if 'q_summary.append({' in text:
-        # Instead of 'pd.DataFrame(q_summary).to_csv(OUT_DIR / "quartile_analysis_results.csv", index=False)'
-        # Let's just find that export and replace it.
+        # Update export and replace it.
         text = text.replace('pd.DataFrame(q_summary).to_csv(OUT_DIR / "quartile_analysis_results.csv", index=False)\n    print(f"\\n>> Saved quartile_analysis_results.csv to {OUT_DIR}")',
                             f'for item in q_summary:\n        item["Block/File"] = "quartile_analysis_results.csv"\n        {global_var_name}.append(item)')
 
